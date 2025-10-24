@@ -11,33 +11,6 @@
   "sections": {
     "1761213888344892e1": {
       "type": "_blocks",
-      "blocks": {
-        "ai_gen_block_cdc5010_EgeVfQ": {
-          "type": "ai_gen_block_cdc5010",
-          "settings": {
-            "show_title": true,
-            "title": "Delivery Information",
-            "show_icon": true,
-            "empty_message": "No delivery information available",
-            "background_color": "#f9f9f9",
-            "title_color": "#121212",
-            "text_color": "#121212",
-            "icon_color": "#334FB4",
-            "empty_state_color": "#999999",
-            "border_color": "#e0e0e0",
-            "title_size": 16,
-            "text_size": 14,
-            "padding": 16,
-            "margin_top": 16,
-            "border_radius": 4,
-            "border_thickness": 1
-          },
-          "blocks": {}
-        }
-      },
-      "block_order": [
-        "ai_gen_block_cdc5010_EgeVfQ"
-      ],
       "settings": {}
     },
     "1761213717b2b03ace": {
