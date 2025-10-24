@@ -1,0 +1,330 @@
+{% doc %}
+  @prompt
+    i add metafield for every variant name custom.dilivery_detail i want when i select that variant then show meta field quick without loading the page  please fix this  
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-variant-delivery-{{ ai_gen_id }} {
+    padding: {{ block.settings.padding }}px;
+    background-color: {{ block.settings.background_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+    margin-top: {{ block.settings.margin_top }}px;
+    border: {{ block.settings.border_thickness }}px solid {{ block.settings.border_color }};
+  }
+
+  .ai-variant-delivery__title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    color: {{ block.settings.title_color }};
+    margin: 0 0 12px 0;
+    font-weight: 600;
+  }
+
+  .ai-variant-delivery__content-{{ ai_gen_id }} {
+    font-size: {{ block.settings.text_size }}px;
+    color: {{ block.settings.text_color }};
+    line-height: 1.6;
+  }
+
+  .ai-variant-delivery__icon-{{ ai_gen_id }} {
+    display: inline-block;
+    margin-right: 8px;
+    color: {{ block.settings.icon_color }};
+  }
+
+  .ai-variant-delivery__empty-{{ ai_gen_id }} {
+    font-size: {{ block.settings.text_size }}px;
+    color: {{ block.settings.empty_state_color }};
+    font-style: italic;
+  }
+
+  .ai-variant-delivery--hidden-{{ ai_gen_id }} {
+    display: none;
+  }
+{% endstyle %}
+
+<variant-delivery-info-{{ ai_gen_id }}
+  class="ai-variant-delivery-{{ ai_gen_id }}"
+  data-product-id="{{ product.id }}"
+  {{ block.shopify_attributes }}
+>
+  {% if block.settings.show_title %}
+    <h3 class="ai-variant-delivery__title-{{ ai_gen_id }}">
+      {{ block.settings.title }}
+    </h3>
+  {% endif %}
+
+  <div class="ai-variant-delivery__content-{{ ai_gen_id }}" data-delivery-content>
+    {% if product.selected_or_first_available_variant.metafields.custom.dilivery_detail != blank %}
+      {% if block.settings.show_icon %}
+        <span class="ai-variant-delivery__icon-{{ ai_gen_id }}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        </span>
+      {% endif %}
+      {{ product.selected_or_first_available_variant.metafields.custom.dilivery_detail }}
+    {% else %}
+      <span class="ai-variant-delivery__empty-{{ ai_gen_id }}">
+        {{ block.settings.empty_message }}
+      </span>
+    {% endif %}
+  </div>
+</variant-delivery-info-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class VariantDeliveryInfo{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.productId = this.dataset.productId;
+        this.deliveryContent = this.querySelector('[data-delivery-content]');
+      }
+
+      connectedCallback() {
+        this.setupVariantListener();
+      }
+
+      setupVariantListener() {
+        const productForm = document.querySelector(`product-form[data-product-id="${this.productId}"]`) || 
+                           document.querySelector('product-form') ||
+                           document.querySelector('form[action*="/cart/add"]');
+
+        if (!productForm) {
+          const variantSelects = document.querySelectorAll('variant-selects, variant-radios');
+          variantSelects.forEach(selector => {
+            selector.addEventListener('change', () => this.handleVariantChange());
+          });
+          return;
+        }
+
+        if (productForm.tagName === 'PRODUCT-FORM') {
+          productForm.addEventListener('variant-change', (event) => {
+            if (event.detail && event.detail.variant) {
+              this.updateDeliveryInfo(event.detail.variant);
+            }
+          });
+        } else {
+          const variantInputs = productForm.querySelectorAll('input[name="id"], select[name="id"]');
+          variantInputs.forEach(input => {
+            input.addEventListener('change', () => this.handleVariantChange());
+          });
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const variantId = urlParams.get('variant');
+        if (variantId) {
+          this.fetchVariantData(variantId);
+        }
+      }
+
+      handleVariantChange() {
+        const variantId = this.getSelectedVariantId();
+        if (variantId) {
+          this.fetchVariantData(variantId);
+        }
+      }
+
+      getSelectedVariantId() {
+        const variantInput = document.querySelector('input[name="id"]:checked') || 
+                            document.querySelector('select[name="id"]') ||
+                            document.querySelector('input[name="id"]');
+        
+        if (variantInput) {
+          return variantInput.value;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('variant');
+      }
+
+      fetchVariantData(variantId) {
+        const productHandle = window.location.pathname.split('/products/')[1]?.split('?')[0];
+        if (!productHandle) return;
+
+        fetch(`/products/${productHandle}.js`)
+          .then(response => response.json())
+          .then(product => {
+            const variant = product.variants.find(v => v.id == variantId);
+            if (variant) {
+              this.updateDeliveryInfo(variant);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching variant data:', error);
+          });
+      }
+
+      updateDeliveryInfo(variant) {
+        const deliveryDetail = variant.metafields?.custom?.dilivery_detail;
+        const showIcon = {{ block.settings.show_icon | json }};
+        const emptyMessage = {{ block.settings.empty_message | json }};
+        
+        let iconHtml = '';
+        if (showIcon) {
+          iconHtml = `<span class="ai-variant-delivery__icon-{{ ai_gen_id }}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+          </span>`;
+        }
+
+        if (deliveryDetail) {
+          this.deliveryContent.innerHTML = iconHtml + deliveryDetail;
+        } else {
+          this.deliveryContent.innerHTML = `<span class="ai-variant-delivery__empty-{{ ai_gen_id }}">${emptyMessage}</span>`;
+        }
+      }
+    }
+
+    customElements.define('variant-delivery-info-{{ ai_gen_id }}', VariantDeliveryInfo{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Variant delivery info",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show title",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Delivery Information"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon",
+      "label": "Show delivery icon",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "empty_message",
+      "label": "Empty state message",
+      "default": "No delivery information available"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#f9f9f9"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#121212"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#121212"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#334FB4"
+    },
+    {
+      "type": "color",
+      "id": "empty_state_color",
+      "label": "Empty state color",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#e0e0e0"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Title size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Text size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "padding",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Top margin",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "border_thickness",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "label": "Border thickness",
+      "default": 1
+    }
+  ],
+  "presets": [
+    {
+      "name": "Variant delivery info"
+    }
+  ]
+}
+{% endschema %}
