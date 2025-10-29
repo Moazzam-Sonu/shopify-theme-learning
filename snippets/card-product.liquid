@@ -40,6 +40,20 @@
       assign ratio = 1
     endif
   -%}
+  {%- style -%}
+   .select-variant{
+    display:flex;
+    gap:5px;
+    width:100%;
+   position: relative !important;
+   z-index:10 !important;
+   } 
+   .select-variant img{
+    width:25% !important;
+    height:auto;
+    cursor:pointer;
+   } 
+  {%- endstyle -%}
   <div class="card-wrapper product-card-wrapper underline-links-hover">
     <div
       class="
@@ -106,6 +120,7 @@
             </div>
           </div>
         {%- endif -%}
+       
         <div class="card__content">
           <div class="card__information">
             <h3
@@ -143,6 +158,11 @@
           </div>
         </div>
       </div>
+    <variant-swatch class="select-variant">
+      {%- for variant in card_product.variants  -%}
+        <img class="swatch-images" src="{{ variant.featured_image | image_url: width: 100 }}" alt="{{ variant.title }}" >
+      {%- endfor -%}
+    </variant-swatch>
       <div class="card__content">
         <div class="card__information">
           <h3

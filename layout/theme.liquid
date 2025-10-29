@@ -309,6 +309,8 @@
 
     {% sections 'header-group' %}
 
+ <script src="{{ 'variant-swatch.js' | asset_url }}" defer="defer"></script>
+
     <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
       {{ content_for_layout }}
     </main>
@@ -373,4 +375,5 @@
       <script src="{{ 'cart-drawer.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
   </body>
+ 
 </html>

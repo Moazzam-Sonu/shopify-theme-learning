@@ -92,3 +92,34 @@
     </script>
   </variant-selects>
 {%- endunless -%}
+{%- if product.selected_or_first_available_variant.metafields.custom.dilivery_detail -%}
+  <p id="updated-id"> {{ product.selected_or_first_available_variant.metafields.custom.dilivery_detail }}</p>
+{%- endif -%}
+<script>
+  document.addEventListener("variant:updated", (e) => {
+    const variant = e.detail.id;
+    const productUrl = '/products/{{ product.handle }}';
+    const url = `${productUrl}?variant=${variant}&section_id=dilivery-date`;
+
+    fetch(url)
+      .then((res) => res.text())
+      .then((data) => {
+      
+        const parser = new DOMParser();
+        const dom = parser.parseFromString(data, "text/html");
+
+        // ✅ Make sure the section ID matches your actual section in theme files
+        const newSection = dom.getElementById("shopify-section-dilivery-date");
+       
+        const target = document.getElementById("updated-id");
+       
+        if (newSection && target) {
+          target.innerHTML =`Expected Date ${newSection.innerHTML}`;
+        } else {
+          console.warn("Section or target not found!");
+        }
+      })
+      .catch((error) => console.error("Error updating section:", error));
+  });
+</script>
+
