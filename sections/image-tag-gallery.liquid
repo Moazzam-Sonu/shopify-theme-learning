@@ -5,6 +5,96 @@
   Purpose: Display multiple galleries, each with images, tags & dynamic descriptions.
   ===============================
 {% endcomment %}
+<style>
+  /* ===============================
+     SECTION STYLES: Image Tag Gallery
+     =============================== */
+
+  .image-tag-section {
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 50px 20px;
+  }
+
+  .gallery-group {
+    text-align: center;
+  }
+
+  .image-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+  }
+
+  .image-wrapper {
+    position: relative;
+    width: 280px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .image-wrapper:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .image-wrapper img {
+    width: 100%;
+    border-radius: 14px;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* Tag styling */
+  .tag-label {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Tag position classes */
+  .top-left { top: 12px; left: 12px; }
+  .top-right { top: 12px; right: 12px; }
+  .bottom-left { bottom: 12px; left: 12px; }
+  .bottom-right { bottom: 12px; right: 12px; }
+
+  /* Description */
+  .description-area {
+    margin-top: 25px;
+  }
+
+  .desc-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    max-width: 720px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .image-wrapper {
+      width: 45%;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .image-wrapper {
+      width: 100%;
+    }
+  }
+</style>
 
 <div class="image-tag-section">
   {% for block in section.blocks %}
@@ -41,4 +131,68 @@
       </div>
     </div>
   {% endfor %}
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Select all galleries on the page
+    document.querySelectorAll(".gallery-group").forEach(gallery => {
+      const images = gallery.querySelectorAll(".image-wrapper");
+      const desc = gallery.querySelector(".desc-text");
+
+      images.forEach(img => {
+        img.addEventListener("click", () => {
+          desc.textContent = img.dataset.description || "No description available.";
+        });
+      });
+    });
+  });
+</script>
 </div>
+
+
+{% schema %}
+{
+  "name": "Image Tag Gallery",
+  "settings": [
+    {
+      "type": "select",
+      "id": "tag_position",
+      "label": "Tag Position",
+      "default": "top-left",
+      "options": [
+        { "value": "top-left", "label": "Top Left" },
+        { "value": "top-right", "label": "Top Right" },
+        { "value": "bottom-left", "label": "Bottom Left" },
+        { "value": "bottom-right", "label": "Bottom Right" }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "gallery",
+      "name": "Gallery Group",
+      "settings": [
+        { "type": "header", "content": "Image 1" },
+        { "type": "image_picker", "id": "image_1", "label": "Image 1" },
+        { "type": "text", "id": "tag_1", "label": "Tag Text 1" },
+        { "type": "textarea", "id": "desc_1", "label": "Description 1" },
+
+        { "type": "header", "content": "Image 2" },
+        { "type": "image_picker", "id": "image_2", "label": "Image 2" },
+        { "type": "text", "id": "tag_2", "label": "Tag Text 2" },
+        { "type": "textarea", "id": "desc_2", "label": "Description 2" },
+
+        { "type": "header", "content": "Image 3" },
+        { "type": "image_picker", "id": "image_3", "label": "Image 3" },
+        { "type": "text", "id": "tag_3", "label": "Tag Text 3" },
+        { "type": "textarea", "id": "desc_3", "label": "Description 3" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Dynamic Image Tag Gallery",
+      "category": "Image"
+    }
+  ]
+}
+{% endschema %}
