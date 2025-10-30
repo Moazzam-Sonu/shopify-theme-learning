@@ -1,0 +1,44 @@
+{% comment %}
+  ===============================
+  SECTION: Image Tag Gallery
+  Author: Moazzam + ChatGPT
+  Purpose: Display multiple galleries, each with images, tags & dynamic descriptions.
+  ===============================
+{% endcomment %}
+
+<div class="image-tag-section">
+  {% for block in section.blocks %}
+    <div class="gallery-group" id="gallery-{{ block.id }}">
+      <div class="image-area">
+        {% if block.settings.image_1 %}
+          <div class="image-wrapper" data-description="{{ block.settings.desc_1 | escape }}">
+            <img src="{{ block.settings.image_1 | image_url: width: 800 }}" alt="{{ block.settings.tag_1 | escape }}">
+            <div class="tag-label {{ section.settings.tag_position }}">{{ block.settings.tag_1 }}</div>
+          </div>
+        {% endif %}
+
+        {% if block.settings.image_2 %}
+          <div class="image-wrapper" data-description="{{ block.settings.desc_2 | escape }}">
+            <img src="{{ block.settings.image_2 | image_url: width: 800 }}" alt="{{ block.settings.tag_2 | escape }}">
+            <div class="tag-label {{ section.settings.tag_position }}">{{ block.settings.tag_2 }}</div>
+          </div>
+        {% endif %}
+
+        {% if block.settings.image_3 %}
+          <div class="image-wrapper" data-description="{{ block.settings.desc_3 | escape }}">
+            <img src="{{ block.settings.image_3 | image_url: width: 800 }}" alt="{{ block.settings.tag_3 | escape }}">
+            <div class="tag-label {{ section.settings.tag_position }}">{{ block.settings.tag_3 }}</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="description-area">
+        <p class="desc-text">
+          {% if block.settings.desc_1 %}
+            {{ block.settings.desc_1 }}
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  {% endfor %}
+</div>
