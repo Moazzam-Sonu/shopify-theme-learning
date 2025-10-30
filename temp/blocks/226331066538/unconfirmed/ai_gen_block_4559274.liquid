@@ -1,6 +1,541 @@
+{% doc %}
+  @prompt
+    Create a Shopify section in Liquid, HTML, CSS, and JS that displays an image gallery with dynamic tags and descriptions.
+    
+    Requirements:
+    
+    The section should have a main wrapper <div class="image-tag-section">.
+    
+    Inside it, there should be:
+    
+    An image container <div class="image-area"> that can hold multiple images.
+    
+    A description container <div class="description-area"> below the image area.
+    
+    Each image should have an associated tag (like a label or badge) displayed on top of the image.
+    
+    The tag’s position (top-left, top-right, bottom-left, bottom-right) must be configurable from section settings in the theme editor.
+    
+    When a user clicks on a tag, the description below should change to show the text related to that specific image.
+    
+    The section settings should allow:
+    
+    Adding multiple image blocks, each block containing:
+    
+    Image picker
+    
+    Tag text
+    
+    Description text
+    
+    A global setting for tag position (4 corner options).
+    
+    The layout should be responsive and visually clean.
+    
+    Use simple, semantic HTML, and minimal JavaScript (vanilla JS, no jQuery).
+    
+    Include good default styling for tags (like a small rounded label with background color).
+    
+    Please include:
+    
+    Full .liquid section code with schema
+    
+    Inline JS and CSS
+    
+    Comments in the code explaining each part
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .image-tag-section-{{ ai_gen_id }} {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .image-area-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .image-item-{{ ai_gen_id }} {
+    position: relative;
+    overflow: hidden;
+    border-radius: {{ block.settings.image_border_radius }}px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  .image-item-{{ ai_gen_id }}:hover {
+    transform: translateY(-5px);
+  }
+
+  .image-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    background-color: #f4f4f4;
+  }
+
+  .image-wrapper-{{ ai_gen_id }} img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .image-placeholder-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f4f4f4;
+  }
+
+  .image-placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .image-tag-{{ ai_gen_id }} {
+    position: absolute;
+    background-color: {{ block.settings.tag_bg_color }};
+    color: {{ block.settings.tag_text_color }};
+    padding: 8px 16px;
+    border-radius: {{ block.settings.tag_border_radius }}px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 2;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .image-tag-{{ ai_gen_id }}:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .tag-position-top-left-{{ ai_gen_id }} {
+    top: 15px;
+    left: 15px;
+  }
+
+  .tag-position-top-right-{{ ai_gen_id }} {
+    top: 15px;
+    right: 15px;
+  }
+
+  .tag-position-bottom-left-{{ ai_gen_id }} {
+    bottom: 15px;
+    left: 15px;
+  }
+
+  .tag-position-bottom-right-{{ ai_gen_id }} {
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .description-area-{{ ai_gen_id }} {
+    background-color: {{ block.settings.description_bg_color }};
+    padding: 30px;
+    border-radius: {{ block.settings.description_border_radius }}px;
+    min-height: 120px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .description-content-{{ ai_gen_id }} {
+    display: none;
+    color: {{ block.settings.description_text_color }};
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .description-content-{{ ai_gen_id }}.active {
+    display: block;
+    animation: fadeIn-{{ ai_gen_id }} 0.4s ease-in;
+  }
+
+  .description-placeholder-{{ ai_gen_id }} {
+    color: {{ block.settings.description_text_color }};
+    opacity: 0.6;
+    font-style: italic;
+    text-align: center;
+  }
+
+  @keyframes fadeIn-{{ ai_gen_id }} {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    .image-area-{{ ai_gen_id }} {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .image-tag-{{ ai_gen_id }} {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .description-area-{{ ai_gen_id }} {
+      padding: 20px;
+    }
+  }
+{% endstyle %}
+
+<image-tag-gallery-{{ ai_gen_id }} class="image-tag-section-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="image-area-{{ ai_gen_id }}">
+    {% for i in (1..6) %}
+      {% assign image_key = 'image_' | append: i %}
+      {% assign tag_key = 'tag_text_' | append: i %}
+      {% assign desc_key = 'description_' | append: i %}
+      
+      {% assign current_image = block.settings[image_key] %}
+      {% assign current_tag = block.settings[tag_key] %}
+      {% assign current_desc = block.settings[desc_key] %}
+      
+      {% if current_image or current_tag != blank %}
+        <div class="image-item-{{ ai_gen_id }}" data-image-id="{{ i }}">
+          <div class="image-wrapper-{{ ai_gen_id }}">
+            {% if current_image %}
+              <img
+                src="{{ current_image | image_url: width: 600 }}"
+                alt="{{ current_tag | escape }}"
+                loading="lazy"
+                width="600"
+                height="600"
+              >
+            {% else %}
+              <div class="image-placeholder-{{ ai_gen_id }}">
+                {{ 'image' | placeholder_svg_tag }}
+              </div>
+            {% endif %}
+            
+            {% if current_tag != blank %}
+              <div class="image-tag-{{ ai_gen_id }} tag-position-{{ block.settings.tag_position }}-{{ ai_gen_id }}">
+                {{ current_tag }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="description-area-{{ ai_gen_id }}">
+    {% assign has_content = false %}
+    {% for i in (1..6) %}
+      {% assign image_key = 'image_' | append: i %}
+      {% assign tag_key = 'tag_text_' | append: i %}
+      {% assign desc_key = 'description_' | append: i %}
+      
+      {% assign current_image = block.settings[image_key] %}
+      {% assign current_tag = block.settings[tag_key] %}
+      {% assign current_desc = block.settings[desc_key] %}
+      
+      {% if current_image or current_tag != blank %}
+        {% assign has_content = true %}
+        <div class="description-content-{{ ai_gen_id }}" data-description-id="{{ i }}">
+          {% if current_desc != blank %}
+            {{ current_desc }}
+          {% else %}
+            <p class="description-placeholder-{{ ai_gen_id }}">No description available for this image.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+    
+    {% unless has_content %}
+      <p class="description-placeholder-{{ ai_gen_id }}">Click on an image tag to view its description here.</p>
+    {% endunless %}
+  </div>
+</image-tag-gallery-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class ImageTagGallery{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.imageItems = this.querySelectorAll('.image-item-{{ ai_gen_id }}');
+        this.descriptions = this.querySelectorAll('.description-content-{{ ai_gen_id }}');
+      }
+
+      connectedCallback() {
+        this.setupEventListeners();
+        this.showFirstDescription();
+      }
+
+      setupEventListeners() {
+        this.imageItems.forEach((item) => {
+          item.addEventListener('click', (e) => {
+            const imageId = item.getAttribute('data-image-id');
+            this.showDescription(imageId);
+          });
+        });
+      }
+
+      showDescription(imageId) {
+        this.descriptions.forEach((desc) => {
+          desc.classList.remove('active');
+        });
+
+        const targetDescription = this.querySelector(
+          `.description-content-{{ ai_gen_id }}[data-description-id="${imageId}"]`
+        );
+
+        if (targetDescription) {
+          targetDescription.classList.add('active');
+        }
+      }
+
+      showFirstDescription() {
+        if (this.descriptions.length > 0) {
+          this.descriptions[0].classList.add('active');
+        }
+      }
+    }
+
+    customElements.define('image-tag-gallery-{{ ai_gen_id }}', ImageTagGallery{{ ai_gen_id }});
+  })();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Image tag gallery",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Tag style"
+    },
+    {
+      "type": "select",
+      "id": "tag_position",
+      "label": "Tag position",
+      "options": [
+        {
+          "value": "top-left",
+          "label": "Top left"
+        },
+        {
+          "value": "top-right",
+          "label": "Top right"
+        },
+        {
+          "value": "bottom-left",
+          "label": "Bottom left"
+        },
+        {
+          "value": "bottom-right",
+          "label": "Bottom right"
+        }
+      ],
+      "default": "top-left"
+    },
+    {
+      "type": "color",
+      "id": "tag_bg_color",
+      "label": "Background",
+      "default": "#121212"
+    },
+    {
+      "type": "color",
+      "id": "tag_text_color",
+      "label": "Text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "tag_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 4
+    },
+    {
+      "type": "header",
+      "content": "Image style"
+    },
+    {
+      "type": "range",
+      "id": "image_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Description style"
+    },
+    {
+      "type": "color",
+      "id": "description_bg_color",
+      "label": "Background",
+      "default": "#F3F3F3"
+    },
+    {
+      "type": "color",
+      "id": "description_text_color",
+      "label": "Text",
+      "default": "#121212"
+    },
+    {
+      "type": "range",
+      "id": "description_border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Image 1"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_1",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_1",
+      "label": "Tag text",
+      "default": "Feature 1"
+    },
+    {
+      "type": "richtext",
+      "id": "description_1",
+      "label": "Description",
+      "default": "<p>Add a description for this image that will appear when the tag is clicked.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Image 2"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_2",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_2",
+      "label": "Tag text",
+      "default": "Feature 2"
+    },
+    {
+      "type": "richtext",
+      "id": "description_2",
+      "label": "Description",
+      "default": "<p>Add a description for this image that will appear when the tag is clicked.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Image 3"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_3",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_3",
+      "label": "Tag text",
+      "default": "Feature 3"
+    },
+    {
+      "type": "richtext",
+      "id": "description_3",
+      "label": "Description",
+      "default": "<p>Add a description for this image that will appear when the tag is clicked.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Image 4"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_4",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_4",
+      "label": "Tag text"
+    },
+    {
+      "type": "richtext",
+      "id": "description_4",
+      "label": "Description"
+    },
+    {
+      "type": "header",
+      "content": "Image 5"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_5",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_5",
+      "label": "Tag text"
+    },
+    {
+      "type": "richtext",
+      "id": "description_5",
+      "label": "Description"
+    },
+    {
+      "type": "header",
+      "content": "Image 6"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_6",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "tag_text_6",
+      "label": "Tag text"
+    },
+    {
+      "type": "richtext",
+      "id": "description_6",
+      "label": "Description"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image tag gallery"
+    }
+  ]
+}
 {% endschema %}
